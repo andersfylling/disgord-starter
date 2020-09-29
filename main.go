@@ -31,10 +31,10 @@ func main() {
 
 	client := disgord.New(disgord.Config{
 		ProjectName: "MyBot",
-		BotToken: os.Getenv("DISCORD_TOKEN"),
-		Logger:   log,
+		BotToken:    os.Getenv("DISCORD_TOKEN"),
+		Logger:      log,
 		Presence: &disgord.UpdateStatusPayload{
-			Game:   &disgord.Activity{
+			Game: &disgord.Activity{
 				Name: "write " + prefix + "ping",
 			},
 		},
