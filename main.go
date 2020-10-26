@@ -57,7 +57,7 @@ func main() {
 	})
 	defer client.StayConnectedUntilInterrupted(context.Background())
 
-	log, _ := std.NewLogFilter(client)
+	logFilter, _ := std.NewLogFilter(client)
 	filter, _ := std.NewMsgFilter(context.Background(), client)
 	filter.SetPrefix(prefix)
 
@@ -67,7 +67,7 @@ func main() {
 		WithMdlw(
 			filter.NotByBot,    // ignore bot messages
 			filter.HasPrefix,   // read original
-			log.LogMsg,         // log command message
+			logFilter.LogMsg,         // log command message
 			filter.StripPrefix, // write copy
 		).
 		MessageCreate(replyPongToPing)
