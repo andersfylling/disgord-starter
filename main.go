@@ -38,7 +38,7 @@ func main() {
 		ProjectName: "MyBot",
 		BotToken:    os.Getenv("DISCORD_TOKEN"),
 		Logger:      log,
-		IgnoreEvents: []string{
+		RejectEvents: []string{
 			// rarely used, and causes unnecessary spam
 			disgord.EvtTypingStart,
 
@@ -55,7 +55,7 @@ func main() {
 			},
 		},
 	})
-	defer client.StayConnectedUntilInterrupted(context.Background())
+	defer client.Gateway().StayConnectedUntilInterrupted()
 
 	logFilter, _ := std.NewLogFilter(client)
 	filter, _ := std.NewMsgFilter(context.Background(), client)
@@ -63,11 +63,11 @@ func main() {
 
 	// create a handler and bind it to new message events
 	client.
-		Event().
-		WithMdlw(
+		Gateway().
+		WithMiddleware(
 			filter.NotByBot,    // ignore bot messages
 			filter.HasPrefix,   // read original
-			logFilter.LogMsg,         // log command message
+			logFilter.LogMsg,   // log command message
 			filter.StripPrefix, // write copy
 		).
 		MessageCreate(replyPongToPing)
