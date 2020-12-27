@@ -22,12 +22,13 @@ var noCtx = context.Background()
 // replyPongToPing is a handler that replies pong to ping messages
 func replyPongToPing(s disgord.Session, data *disgord.MessageCreate) {
 	msg := data.Message
+	if msg.Content != "ping" {
+		return
+	}
 
 	// whenever the message written is "ping", the bot replies "pong"
-	if msg.Content == "ping" {
-		if _, err := msg.Reply(noCtx, s, "pong"); err != nil {
-			log.Error(fmt.Errorf("failed to reply to ping. %w", err))
-		}
+	if _, err := msg.Reply(noCtx, s, "pong"); err != nil {
+		log.Error(fmt.Errorf("failed to reply to ping. %w", err))
 	}
 }
 
@@ -54,6 +55,17 @@ func main() {
 				Name: "write " + prefix + "ping",
 			},
 		},
+		// I WANT DM EVENTS
+		// these are events sent directly to your bot through
+		// direct messaging.
+		// I recommend just not using these unless you have a specific use case.
+		// WARNING: you only specify intents when you want DM capabilities. 
+		//  For anything else, populate the RejectEvents setting above.
+		//Intents: []disgord.Intent{
+		//	disgord.IntentDirectMessageReactions,
+		//	disgord.IntentDirectMessageTyping,
+		//	disgord.IntentDirectMessages,
+		//},
 	})
 	defer client.Gateway().StayConnectedUntilInterrupted()
 
@@ -62,13 +74,14 @@ func main() {
 	filter.SetPrefix(prefix)
 
 	// create a handler and bind it to new message events
+	// thing about the middlewares are whitelists or passthrough functions.
 	client.
 		Gateway().
 		WithMiddleware(
 			filter.NotByBot,    // ignore bot messages
-			filter.HasPrefix,   // read original
+			filter.HasPrefix,   // message must have the given prefix
 			logFilter.LogMsg,   // log command message
-			filter.StripPrefix, // write copy
+			filter.StripPrefix, // remove the command prefix from the message
 		).
 		MessageCreate(replyPongToPing)
 }
