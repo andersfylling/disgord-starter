@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"os"
 
 	"github.com/andersfylling/disgord"
@@ -14,21 +13,30 @@ var log = &logrus.Logger{
 	Out:       os.Stderr,
 	Formatter: new(logrus.TextFormatter),
 	Hooks:     make(logrus.LevelHooks),
-	Level:     logrus.ErrorLevel,
+	Level:     logrus.InfoLevel, // Specifies we only want logs in stdout @ Info or higher
 }
 
 var noCtx = context.Background()
 
-// replyPongToPing is a handler that replies pong to ping messages
-func replyPongToPing(s disgord.Session, data *disgord.MessageCreate) {
-	msg := data.Message
-	if msg.Content != "ping" {
-		return
+// checkErr logs errors if not nil, along with a user-specified trace
+func checkErr(err error, trace string) {
+	if err != nil {
+		log.WithFields(logrus.Fields{
+			"trace": trace,
+		}).Error(err)
 	}
+}
 
-	// whenever the message written is "ping", the bot replies "pong"
-	if _, err := msg.Reply(noCtx, s, "pong"); err != nil {
-		log.Error(fmt.Errorf("failed to reply to ping. %w", err))
+// handleMsg is a basic command handler
+func handleMsg(s disgord.Session, data *disgord.MessageCreate) {
+	msg := data.Message
+
+	switch msg.Content {
+	case "ping": // whenever the message written is "ping", the bot replies "pong"
+		_, err := msg.Reply(noCtx, s, "pong")
+		checkErr(err, "ping command")
+	default: // unknown command, bot does nothing.
+		return
 	}
 }
 
@@ -50,23 +58,22 @@ func main() {
 			disgord.EvtGuildMemberUpdate,
 			disgord.EvtGuildMemberRemove,
 		},
+		// ! Non-functional due to a current bug, will be fixed.
 		Presence: &disgord.UpdateStatusPayload{
 			Game: &disgord.Activity{
 				Name: "write " + prefix + "ping",
 			},
 		},
-		// I WANT DM EVENTS
-		// these are events sent directly to your bot through
-		// direct messaging.
-		// I recommend just not using these unless you have a specific use case.
-		// WARNING: you only specify intents when you want DM capabilities. 
-		//  For anything else, populate the RejectEvents setting above.
-		//Intents: []disgord.Intent{
-		//	disgord.IntentDirectMessageReactions,
-		//	disgord.IntentDirectMessageTyping,
-		//	disgord.IntentDirectMessages,
-		//},
+		DMIntents: disgord.IntentDirectMessages | disgord.IntentDirectMessageReactions | disgord.IntentDirectMessageTyping,
+
+		/*
+			! I DONT WANT DM EVENTS:
+			DMIntents allows your bot to recieve commands in DM, as well as Send messages in DMs.
+			Remove the above line if not necessary
+		*/
+
 	})
+
 	defer client.Gateway().StayConnectedUntilInterrupted()
 
 	logFilter, _ := std.NewLogFilter(client)
@@ -75,13 +82,16 @@ func main() {
 
 	// create a handler and bind it to new message events
 	// thing about the middlewares are whitelists or passthrough functions.
-	client.
-		Gateway().
-		WithMiddleware(
-			filter.NotByBot,    // ignore bot messages
-			filter.HasPrefix,   // message must have the given prefix
-			logFilter.LogMsg,   // log command message
-			filter.StripPrefix, // remove the command prefix from the message
-		).
-		MessageCreate(replyPongToPing)
+	client.Gateway().WithMiddleware(
+		filter.NotByBot,    // ignore bot messages
+		filter.HasPrefix,   // message must have the given prefix
+		logFilter.LogMsg,   // log command message
+		filter.StripPrefix, // remove the command prefix from the message
+	).MessageCreate(handleMsg)
+
+	// create a handler and bind it to the bot init
+	// dummy log print
+	client.Gateway().BotReady(func() {
+		log.Info("Bot is ready!")
+	})
 }
