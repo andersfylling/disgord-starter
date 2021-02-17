@@ -13,7 +13,7 @@ var log = &logrus.Logger{
 	Out:       os.Stderr,
 	Formatter: new(logrus.TextFormatter),
 	Hooks:     make(logrus.LevelHooks),
-	Level:     logrus.InfoLevel, // Specifies we only want logs in stdout @ Info or higher
+	Level:     logrus.InfoLevel,
 }
 
 var noCtx = context.Background()
@@ -65,12 +65,7 @@ func main() {
 			},
 		},
 		DMIntents: disgord.IntentDirectMessages | disgord.IntentDirectMessageReactions | disgord.IntentDirectMessageTyping,
-
-		/*
-			! I DONT WANT DM EVENTS:
-			DMIntents allows your bot to recieve commands in DM, as well as Send messages in DMs.
-			Remove the above line if not necessary
-		*/
+		// comment out DMIntents if you do not want the bot to handle direct messages
 
 	})
 
