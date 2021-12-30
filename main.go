@@ -47,7 +47,7 @@ func main() {
 		ProjectName: "MyBot",
 		BotToken:    os.Getenv("DISCORD_TOKEN"),
 		Logger:      log,
-		Intents: disgord.IntentGuildMessages,
+		Intents:     disgord.IntentGuildMessages,
 		// ! Non-functional due to a current bug, will be fixed.
 		Presence: &disgord.UpdateStatusPayload{
 			Game: &disgord.Activity{
