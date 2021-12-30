@@ -47,26 +47,13 @@ func main() {
 		ProjectName: "MyBot",
 		BotToken:    os.Getenv("DISCORD_TOKEN"),
 		Logger:      log,
-		RejectEvents: []string{
-			// rarely used, and causes unnecessary spam
-			disgord.EvtTypingStart,
-
-			// these require special privilege
-			// https://discord.com/developers/docs/topics/gateway#privileged-intents
-			disgord.EvtPresenceUpdate,
-			disgord.EvtGuildMemberAdd,
-			disgord.EvtGuildMemberUpdate,
-			disgord.EvtGuildMemberRemove,
-		},
+		Intents: disgord.IntentGuildMessages,
 		// ! Non-functional due to a current bug, will be fixed.
 		Presence: &disgord.UpdateStatusPayload{
 			Game: &disgord.Activity{
 				Name: "write " + prefix + "ping",
 			},
 		},
-		DMIntents: disgord.IntentDirectMessages | disgord.IntentDirectMessageReactions | disgord.IntentDirectMessageTyping,
-		// comment out DMIntents if you do not want the bot to handle direct messages
-
 	})
 
 	defer client.Gateway().StayConnectedUntilInterrupted()
