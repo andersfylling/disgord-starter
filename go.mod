@@ -1,6 +1,6 @@
 module main
 
-go 1.15
+go 1.19
 
 require (
 	github.com/andersfylling/disgord v0.35.1
